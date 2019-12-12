@@ -1,0 +1,10 @@
+{
+  "lambda": {
+    "role": "google-sheet-api-node-executor",
+    "name": "google-sheet-api-node",
+    "region": "eu-west-3"
+  },
+  "api": {
+    "id": "u15gw4ntm6"
+  }
+}
