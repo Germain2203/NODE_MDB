@@ -29,7 +29,6 @@ app.set('view engine', 'html');
 
 LOCAL = true
 
-
 app.get('/', function (req, res) {
   //res.set({"Access-Control-Allow-Origin": "*"})
     if (LOCAL) {
@@ -45,9 +44,13 @@ app.get('/', function (req, res) {
 
 
 app.post('/', function(req, res) {
-authorizeAndPostData((data) =>{
-  console.log('fonctionne :',data)
-});
+var data = []
+data.push(req.body.auteur)
+data.push(req.body.societe)
+data.push(req.body.nom)
+data.push(req.body.prenom)
+console.log(data)
+authorizeAndPostData(data);
 })
 
 
@@ -181,7 +184,7 @@ function getNewToken(oAuth2Client, callback) {
  * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-function postDataToGgsheet(auth){
+function postDataToGgsheet(auth,nouvelleLigne){
   const sheets = google.sheets({version: 'v4', auth});
   var request = {
     // The ID of the spreadsheet to update.
@@ -191,16 +194,14 @@ function postDataToGgsheet(auth){
     range: 'Feuille 1',  // TODO: Update placeholder value.
     // How the input data should be interpreted.
     valueInputOption: 'RAW',  // TODO: Update placeholder value.
-
-   
-
+ 
     resource: {
       // TODO: Add desired properties to the request body.
       majorDimension: "ROWS",
   values: [
-    [
-      "TEST DE VALEUR"
-    ]
+    
+     nouvelleLigne
+    
   ]
     },
   }
@@ -209,11 +210,12 @@ function postDataToGgsheet(auth){
     if (err) {
       console.error(err);
       return;
-    }
-
+    } else {
+      
     // TODO: Change code below to process the `response` object:
-    console.log(JSON.stringify('response : ',response, null, 2));
-  })
+    //console.log(JSON.stringify(response, null, 2));
+  }
+})
 
 }
 
