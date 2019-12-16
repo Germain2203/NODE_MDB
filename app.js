@@ -49,6 +49,7 @@ data.push(req.body.auteur)
 data.push(req.body.societe)
 data.push(req.body.nom)
 data.push(req.body.prenom)
+
 console.log(data)
 authorizeAndPostData(data);
 })
