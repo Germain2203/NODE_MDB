@@ -1,8 +1,8 @@
 const fs = require('fs');
 const readline = require('readline');
-const {google} = require('googleapis');
+const { google } = require('googleapis');
 const express = require('express')
-const cors = require ('cors');
+const cors = require('cors');
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 // The file token.json stores the user's access and refresh tokens, and is
@@ -18,40 +18,44 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
-app.use(function(req,res,next){
-  res.header("Access-Control-Allow-Origin","*")
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*")
   express.static('public')
   next()
 });
-app.use(cors({origin:'*'}))
+app.use(cors({ origin: '*' }))
 app.engine('.html', require('ejs').__express);
 app.set('view engine', 'html');
 
-LOCAL = true
+LOCAL = false
+
 
 app.get('/', function (req, res) {
   //res.set({"Access-Control-Allow-Origin": "*"})
-    if (LOCAL) {
-      authorizeAndGetData((data) => {
-        return res.json(data)
-      })
-    } else {
-        authorizeAndGetData((data) => {
-          return res.json(data)
-        })
-    }
+  if (LOCAL) {
+    authorizeAndGetData((data) => {
+      return res.json(data)
+    })
+  } else {
+    authorizeAndGetData((data) => {
+      return res.json(data)
+    })
+  }
 });
 
 
-app.post('/', function(req, res) {
-var data = []
-data.push(req.body.auteur)
-data.push(req.body.societe)
-data.push(req.body.nom)
-data.push(req.body.prenom)
+app.post('/', function (req, res) {
+  var data = []
+  var obj = JSON.parse(req.body.objStr)
+  data.push(obj.auteur)
+  data.push(obj.societe)
+  data.push(obj.nom)
+  data.push(obj.prenom)
 
-console.log(data)
-authorizeAndPostData(data);
+  console.log(req)
+  console.log(data)
+  authorizeAndPostData(data);
+  
 })
 
 
@@ -59,28 +63,28 @@ authorizeAndPostData(data);
 /* SERVEUR OU EXPORT LAMBDA     */
 /* ---------------------------- */
 if (LOCAL) {
-    server.listen(process.env.PORT || 3000, function () {
+  server.listen(process.env.PORT || 3000, function () {
     console.log('app running');
-    });
+  });
 } else {
-    module.exports = app
+  module.exports = app
 }
 
 function authorizeAndPostData(callback) {
   fs.readFile('credentials.json', (err, content) => {
-      if (err) return console.log('Error loading client secret file:', err);
-      // Authorize a client with credentials, then call the Google Sheets API.
-      authorize(JSON.parse(content), postDataToGgsheet, callback);
-    });
+    if (err) return console.log('Error loading client secret file:', err);
+    // Authorize a client with credentials, then call the Google Sheets API.
+    authorize(JSON.parse(content), postDataToGgsheet, callback);
+  });
 }
 
 // Load client secrets from a local file.
 function authorizeAndGetData(callback) {
-    fs.readFile('credentials.json', (err, content) => {
-        if (err) return console.log('Error loading client secret file:', err);
-        // Authorize a client with credentials, then call the Google Sheets API.
-        authorize(JSON.parse(content), getDataFromGoogleSheet, callback);
-      });
+  fs.readFile('credentials.json', (err, content) => {
+    if (err) return console.log('Error loading client secret file:', err);
+    // Authorize a client with credentials, then call the Google Sheets API.
+    authorize(JSON.parse(content), getDataFromGoogleSheet, callback);
+  });
 }
 
 
@@ -91,9 +95,9 @@ function authorizeAndGetData(callback) {
  * @param {function} callback The callback to call with the authorized client.
  */
 function authorize(credentials, callback, callback2) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
+  const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
+    client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
@@ -109,46 +113,46 @@ function authorize(credentials, callback, callback2) {
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
 function getDataFromGoogleSheet(auth, callback) {
-    const sheets = google.sheets({version: 'v4', auth});
-    sheets.spreadsheets.values.get({
-      //spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-      //spreadsheetId: '1KBWJ50UsZjtS_LK5NSSiUsnJ6vFQvDpAD_rcytZCrUM', // dev
-      //spreadsheetId: '18o02aE31jr_tUaNnlgO5qs2YG15HSnd3zO2e7vuiJaM', // prod
+  const sheets = google.sheets({ version: 'v4', auth });
+  sheets.spreadsheets.values.get({
+    //spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+    //spreadsheetId: '1KBWJ50UsZjtS_LK5NSSiUsnJ6vFQvDpAD_rcytZCrUM', // dev
+    //spreadsheetId: '18o02aE31jr_tUaNnlgO5qs2YG15HSnd3zO2e7vuiJaM', // prod
 
-      spreadsheetId: '1sKgRq8x1HcasN68JAXapTww-hnTJF5ZQ4uBbjJiiGCM', // mur des bons
+    spreadsheetId: '1sKgRq8x1HcasN68JAXapTww-hnTJF5ZQ4uBbjJiiGCM', // mur des bons
 
-      range: 'Feuille 1',
-    }, (err, res) => {
-      console.log(err)
-      console.log(res)
-      if (err) return console.log('The API returned an error: ' + err);
-      
-      const rows = res.data.values;
-      if (rows.length) {
-        
-          var keys = rows[1]
-  
-          rows.shift()
-          rows.shift()
-  
-          var googleSheetData = []
-  
-          for (row of rows) {
-              projectJson = {}
-              for (let i = 0; i < keys.length; i++) {
-                  projectJson[keys[i]] = row[i]
-              }
-              googleSheetData.push(projectJson)
-          }
-  
-          //console.log(googleSheetData)
-          callback(googleSheetData)
-  
-      } else {
-        console.log('No data found.');
+    range: 'Feuille 1',
+  }, (err, res) => {
+    console.log(err)
+    console.log(res)
+    if (err) return console.log('The API returned an error: ' + err);
+
+    const rows = res.data.values;
+    if (rows.length) {
+
+      var keys = rows[1]
+
+      rows.shift()
+      rows.shift()
+
+      var googleSheetData = []
+
+      for (row of rows) {
+        projectJson = {}
+        for (let i = 0; i < keys.length; i++) {
+          projectJson[keys[i]] = row[i]
+        }
+        googleSheetData.push(projectJson)
       }
-    });
-  }
+
+      //console.log(googleSheetData)
+      callback(googleSheetData)
+
+    } else {
+      console.log('No data found.');
+    }
+  });
+}
 
 /**
  * Get and store new token after prompting for user authorization, and then
@@ -185,8 +189,8 @@ function getNewToken(oAuth2Client, callback) {
  * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-function postDataToGgsheet(auth,nouvelleLigne){
-  const sheets = google.sheets({version: 'v4', auth});
+function postDataToGgsheet(auth, nouvelleLigne) {
+  const sheets = google.sheets({ version: 'v4', auth });
   var request = {
     // The ID of the spreadsheet to update.
     spreadsheetId: '1WWwdmw3HzLwWPsYIPOLyaLJdNQQALXLAu_U2BESH1PM',  // TODO: Update placeholder value.
@@ -195,28 +199,29 @@ function postDataToGgsheet(auth,nouvelleLigne){
     range: 'Feuille 1',  // TODO: Update placeholder value.
     // How the input data should be interpreted.
     valueInputOption: 'RAW',  // TODO: Update placeholder value.
- 
+
     resource: {
       // TODO: Add desired properties to the request body.
       majorDimension: "ROWS",
-  values: [
-    
-     nouvelleLigne
-    
-  ]
+      values: [
+
+        nouvelleLigne
+
+      ]
     },
   }
 
-  sheets.spreadsheets.values.append(request, function(err, response) {
+  sheets.spreadsheets.values.append(request, function (err, response) {
     if (err) {
       console.error(err);
       return;
     } else {
-      
-    // TODO: Change code below to process the `response` object:
-    //console.log(JSON.stringify(response, null, 2));
-  }
-})
+
+      //res.sendStatus(200);
+      // TODO: Change code below to process the `response` object:
+      //console.log(JSON.stringify(response, null, 2));
+    }
+  })
 
 }
 
